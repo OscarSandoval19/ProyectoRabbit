@@ -10,7 +10,7 @@ public class Transaccion {
 
     public Transaccion() {}
 
-    // Getters y Setters
+   
     public String getIdTransaccion() { return idTransaccion; }
     public void setIdTransaccion(String idTransaccion) { this.idTransaccion = idTransaccion; }
     public double getMonto() { return monto; }

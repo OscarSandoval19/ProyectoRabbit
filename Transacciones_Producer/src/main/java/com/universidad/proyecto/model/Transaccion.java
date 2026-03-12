@@ -1,19 +1,23 @@
 package com.universidad.proyecto.model;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
+@JsonPropertyOrder({ "idTransaccion", "detalle", "monto", "moneda", "cuentaOrigen", "bancoDestino" })
 public class Transaccion {
 	
 	    private String idTransaccion;
+	    private Detalle detalle;
 	    private double monto;
 	    private String moneda;
 	    private String cuentaOrigen;
 	    private String bancoDestino;
-	    private Detalle detalle;
-
+	    
 	    public Transaccion() {}
 
-	    // Getters y Setters (Tienen que coincidir los nombres)
+
 	    public String getIdTransaccion() { return idTransaccion; }
 	    public void setIdTransaccion(String idTransaccion) { this.idTransaccion = idTransaccion; }
+	    public Detalle getDetalle() { return detalle; }
+	    public void setDetalle(Detalle detalle) { this.detalle = detalle; }
 	    public double getMonto() { return monto; }
 	    public void setMonto(double monto) { this.monto = monto; }
 	    public String getMoneda() { return moneda; }
@@ -22,6 +26,5 @@ public class Transaccion {
 	    public void setCuentaOrigen(String cuentaOrigen) { this.cuentaOrigen = cuentaOrigen; }
 	    public String getBancoDestino() { return bancoDestino; }
 	    public void setBancoDestino(String bancoDestino) { this.bancoDestino = bancoDestino; }
-	    public Detalle getDetalle() { return detalle; }
-	    public void setDetalle(Detalle detalle) { this.detalle = detalle; }
+	    
 }

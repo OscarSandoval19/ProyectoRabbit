@@ -9,7 +9,7 @@ public class LoteTransacciones {
 
     public LoteTransacciones() {} 
 
-    // Getters y Setters
+   
     public String getLoteId() { return loteId; }
     public void setLoteId(String loteId) { this.loteId = loteId; }
     public String getFechaGeneracion() { return fechaGeneracion; }

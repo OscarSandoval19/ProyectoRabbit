@@ -7,7 +7,6 @@ import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 import com.universidad.proyecto.model.LoteTransacciones;
 import com.universidad.proyecto.model.Transaccion;
-import java.util.UUID;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -18,7 +17,7 @@ import java.time.Duration;
 public class Main {
 
     public static void main(String[] args) {
-        // URL de la API proporcionada por el docente
+      
         String urlApi = "https://hly784ig9d.execute-api.us-east-1.amazonaws.com/default/transacciones"; 
 
         try {
@@ -65,27 +64,25 @@ public class Main {
 
             for (Transaccion tx : lote.getTransacciones()) {
                 
-                
-                String uuidUnico = UUID.randomUUID().toString().substring(0, 8).toUpperCase();
-                tx.setIdTransaccion("TX-" + uuidUnico);
-
-                
+               
                 if (tx.getDetalle() != null) {
-                    String miInfo = "Carnet: 0905-24-5388"; 
-                    tx.getDetalle().setDescripcion(miInfo + " | " + tx.getDetalle().getDescripcion());
+                    String Nombre = "Oscar Guillermo Sandoval García"; 
+                    String Carnet = "0905-24-5388"; 
+                    String Correo = "osandovalg1@miumg.edu.gt";
+                    String firma = "Alumno: " + Nombre + " | Carnet: " + Carnet + "| Correo: " + Correo;
+                    tx.getDetalle().setDescripcion(firma + " | " + tx.getDetalle().getDescripcion());
                 }
-                
-                
+               
 
                 String nombreCola = tx.getBancoDestino(); 
                 channel.queueDeclare(nombreCola, true, false, false, null);
 
-                // Convertir el objeto YA MODIFICADO a JSON String
+                
                 String mensajeJson = mapper.writeValueAsString(tx);
 
                 channel.basicPublish("", nombreCola, null, mensajeJson.getBytes(StandardCharsets.UTF_8));
                 
-                System.out.println(" [✔] Enviada TX Unica: " + tx.getIdTransaccion() + " a cola: " + nombreCola);
+                System.out.println(" [✔] Enviada TX " + tx.getIdTransaccion() + " a cola: " + nombreCola);
             }
             
             System.out.println("\n--- Proceso finalizado correctamente ---");
@@ -95,5 +92,3 @@ public class Main {
         }
     }
 }
-
-//tungtungtungsahur

@@ -16,10 +16,10 @@ import java.time.Duration;
 
 public class Main {
 
-    // URL de Amazon proporcionada para el POST
+   
     private static final String POST_URL = "https://7e0d9ogwzd.execute-api.us-east-1.amazonaws.com/default/guardarTransacciones";
     
-    // Lista de las colas que debe escuchar (Bancos)
+    
     private static final String[] BANCOS = {"BAC", "BANRURAL", "BI", "GYT"};
 
     public static void main(String[] args) {
@@ -49,32 +49,31 @@ public class Main {
                     String jsonMensaje = new String(delivery.getBody(), StandardCharsets.UTF_8);
                     
                     try {
-                        // 1. Convertir JSON a Objeto Java (Deserialización)
+                       
                         Transaccion tx = mapper.readValue(jsonMensaje, Transaccion.class);
-                        System.out.println("\n [📥] Procesando TX: " + tx.getIdTransaccion() + " del banco: " + banco);
+                        System.out.println("\n Procesando TX: " + tx.getIdTransaccion() + " del banco: " + banco);
 
-                        // 2. Enviar la transacción al POST de Amazon
+                        
                         boolean exitoso = enviarACloud(httpClient, jsonMensaje);
 
                         if (exitoso) {
-                            // 3. Confirmar a RabbitMQ que el mensaje se procesó correctamente
-                            // (autoAck = false, por eso usamos basicAck manual)
+                            
                             channel.basicAck(delivery.getEnvelope().getDeliveryTag(), false);
-                            System.out.println(" [✅] Transacción guardada en la nube y confirmada en Rabbit.");
+                            System.out.println(" Transacción guardada en la nube y confirmada en Rabbit.");
                         } else {
-                            // 4. Si el POST falló, NO confirmamos el mensaje (se queda en la cola)
+                            
                             System.err.println(" [❌] Error al enviar a la nube. El mensaje volverá a la cola.");
                             channel.basicNack(delivery.getEnvelope().getDeliveryTag(), false, true);
                         }
 
                     } catch (Exception e) {
                         System.err.println(" [!] Error procesando el mensaje: " + e.getMessage());
-                        // Si el JSON está mal, no lo reintentamos para no bloquear la cola (requeue = false)
+                        
                         channel.basicNack(delivery.getEnvelope().getDeliveryTag(), false, false);
                     }
                 };
 
-                // Iniciar el consumo (autoAck = false para garantizar que no se pierdan datos)
+             
                 channel.basicConsume(banco, false, deliverCallback, consumerTag -> {});
             }
 
@@ -84,9 +83,7 @@ public class Main {
         }
     }
 
-    /**
-     * Método para enviar el JSON mediante POST a la API de Amazon
-     */
+    
     private static boolean enviarACloud(HttpClient client, String jsonBody) {
         try {
             HttpRequest request = HttpRequest.newBuilder()
@@ -100,7 +97,7 @@ public class Main {
         
             System.out.println("  Respuesta de Amazon: " + response.statusCode() + " - " + response.body());
 
-            // Solo devolvemos éxito si la API responde 200 OK
+         
             return response.statusCode() == 200 ||response.statusCode() == 201;
 
         } catch (Exception e) {

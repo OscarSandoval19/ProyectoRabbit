@@ -6,7 +6,7 @@ public class Referencias {
 
     public Referencias() {}
 
-    //Getters y Setters
+   
     public String getFactura() { return factura; }
     public void setFactura(String factura) { this.factura = factura; }
     public String getCodigoInterno() { return codigoInterno; }

@@ -8,7 +8,7 @@ public class Detalle {
 
     public Detalle() {}
 
-    //Getters y Setters
+    //Getters y setters
     public String getNombreBeneficiario() { return nombreBeneficiario; }
     public void setNombreBeneficiario(String nombreBeneficiario) { this.nombreBeneficiario = nombreBeneficiario; }
     public String getTipoTransferencia() { return tipoTransferencia; }
