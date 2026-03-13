@@ -2106,3 +2106,26 @@ Caused by: java.io.IOException: CreateProcess error=2, El sistema no puede encon
 	at java.base/java.lang.ProcessImpl.start(ProcessImpl.java:159)
 	at java.base/java.lang.ProcessBuilder.start(ProcessBuilder.java:1126)
 	... 8 more
+
+!ENTRY org.eclipse.lsp4e 4 0 2026-03-13 13:26:34.092
+!MESSAGE [Error]	[state-database] Failed to initialize state database Error: State database initialization timed out
+    at C:\snapshot\copilot-intellij\agent\src\state\stateDatabase.ts:243:23
+    at lp.initializeWithTimeout (C:\snapshot\copilot-intellij\agent\src\state\stateDatabase.ts:240:9)
+
+!ENTRY org.eclipse.lsp4e 1 0 2026-03-13 13:26:34.099
+!MESSAGE [Info]	[lsp] GitHub Copilot Language Server 1.412.0 initialized
+
+!ENTRY org.eclipse.lsp4e 2 0 2026-03-13 13:26:35.068
+!MESSAGE [Warning]	[McpAutoApproveService] Invalid McpAutoApproveService config, resetting to empty undefined
+
+!ENTRY org.eclipse.lsp4e 1 0 2026-03-13 13:26:35.141
+!MESSAGE [Info]	[certificates] Removed 13 expired certificates
+
+!ENTRY org.eclipse.lsp4e 1 0 2026-03-13 13:26:35.259
+!MESSAGE [Info]	[default] Policy watcher started for GitHub Copilot Plugin
+
+!ENTRY org.eclipse.lsp4e 1 0 2026-03-13 13:26:35.301
+!MESSAGE [Info]	[GithubAvailableEmbeddingTypes] Could not find any available embedding types. Error: noSession
+
+!ENTRY org.eclipse.lsp4e 2 0 2026-03-13 13:26:36.110
+!MESSAGE [Warning]	[McpAutoApproveService] Invalid McpAutoApproveService config, resetting to empty undefined
