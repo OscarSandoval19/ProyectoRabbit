@@ -7,5 +7,4 @@ INDEX VERSION 1.134+C:\Users\USUARIOTC\Desktop\Proyecto\.metadata\.plugins\org.e
 2135835830.index
 4099203707.index
 214985392.index
-325819520.index
 2333315942.index
