@@ -64,23 +64,30 @@ public class Main {
             ObjectMapper mapper = new ObjectMapper();
             mapper.registerModule(new JavaTimeModule());
 
-         
+            
             Map<String, Object> argsMap = new HashMap<>();
             argsMap.put("x-max-priority", 10);
 
+           
             for (Transaccion tx : lote.getTransacciones()) {
                 
+               
+                String nombreCola = tx.getBancoDestino();
+                
+               
+                if (nombreCola == null || nombreCola.isEmpty()) {
+                    continue;
+                }
+
+              
                 if (tx.getDetalle() != null) {
                     String Nombre = "Oscar Guillermo Sandoval García"; 
                     String Carnet = "0905-24-5388"; 
-                    String Correo = "osandovalg1@miumg.edu.gt";
-                    String firma = "Alumno: " + Nombre + " | Carnet: " + Carnet + "| Correo: " + Correo;
+                    String firma = "Alumno: " + Nombre + " | Carnet: " + Carnet;
                     tx.getDetalle().setDescripcion(firma + " | " + tx.getDetalle().getDescripcion());
                 }
 
-                String nombreCola = tx.getBancoDestino(); 
-                
-                
+               
                 channel.queueDeclare(nombreCola, true, false, false, argsMap);
 
                
@@ -93,16 +100,17 @@ public class Main {
 
                 String mensajeJson = mapper.writeValueAsString(tx);
 
-             
+               
                 channel.basicPublish("", nombreCola, props, mensajeJson.getBytes(StandardCharsets.UTF_8));
                 
-                System.out.println(" [✔] Enviada TX " + tx.getIdTransaccion() + " a cola: " + nombreCola + " [Prioridad: " + nivelPrioridad + "]");
+                System.out.println(" [✔] Enviada TX " + tx.getIdTransaccion() + " a cola: " + nombreCola + " [Prio: " + nivelPrioridad + "]");
             }
             
             System.out.println("\n--- Proceso finalizado correctamente ---");
 
         } catch (Exception e) {
             System.err.println("Error enviando a RabbitMQ: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 }
