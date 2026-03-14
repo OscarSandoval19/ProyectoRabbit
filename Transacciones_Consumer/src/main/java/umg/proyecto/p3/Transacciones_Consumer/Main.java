@@ -14,7 +14,9 @@ import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 public class Main {
@@ -22,8 +24,8 @@ public class Main {
     private static final String POST_URL = "https://7e0d9ogwzd.execute-api.us-east-1.amazonaws.com/default/guardarTransacciones";
     private static final String[] BANCOS = {"BAC", "BANRURAL", "BI", "GYT"};
     private static final String COLA_DUPLICADOS = "cola_duplicados";
+    private static final String COLA_ERRORES = "cola_errores";
 
-  
     private static final Set<String> idsProcesados = Collections.synchronizedSet(new HashSet<>());
 
     public static void main(String[] args) {
@@ -41,57 +43,57 @@ public class Main {
 
            
             channel.queueDeclare(COLA_DUPLICADOS, true, false, false, null);
+            channel.queueDeclare(COLA_ERRORES, true, false, false, null);
 
-            System.out.println(" [*] Esperando transacciones de los bancos. Para salir presiona CTRL+C");
+            
+            Map<String, Object> argumentosPrioridad = new HashMap<>();
+            argumentosPrioridad.put("x-max-priority", 10);
+
+            System.out.println(" [*] Esperando transacciones. Prioridad Máxima: 10. CTRL+C para salir.");
 
             for (String banco : BANCOS) {
-                channel.queueDeclare(banco, true, false, false, null);
+                
+                channel.queueDeclare(banco, true, false, false, argumentosPrioridad);
 
                 DeliverCallback deliverCallback = (consumerTag, delivery) -> {
                     String jsonMensaje = new String(delivery.getBody(), StandardCharsets.UTF_8);
+                    
+                    
+                    Integer prioridad = delivery.getProperties().getPriority();
+                    if (prioridad == null) prioridad = 0;
 
                     try {
                         Transaccion tx = mapper.readValue(jsonMensaje, Transaccion.class);
                         String idActual = tx.getIdTransaccion();
 
-                      
                         if (idsProcesados.contains(idActual)) {
-                        
-                            System.out.println("\n-----------------------------------------");
-                            System.out.println("ID Transacción: " + idActual);
-                            System.out.println("Estado: DUPLICADA");
-                            System.out.println("Cola Destino: " + COLA_DUPLICADOS);
-                            System.out.println("Atendiendo cola: " + banco);
-                            System.out.println("-----------------------------------------");
-
                             
-                            channel.basicPublish("", COLA_DUPLICADOS, null, jsonMensaje.getBytes(StandardCharsets.UTF_8));
+                            imprimirLog(idActual, "DUPLICADA", COLA_DUPLICADOS, banco, prioridad);
+                            channel.basicPublish("", COLA_DUPLICADOS, null, delivery.getBody());
                             channel.basicAck(delivery.getEnvelope().getDeliveryTag(), false);
 
                         } else {
+                           
                             idsProcesados.add(idActual);
-
-                            System.out.println("\n-----------------------------------------");
-                            System.out.println("ID Transacción: " + idActual);
-                            System.out.println("Estado: PROCESADA");
-                            System.out.println("Cola Destino: API_AWS_POST");
-                            System.out.println("Atendiendo cola: " + banco);
-                            System.out.println("-----------------------------------------");
+                            imprimirLog(idActual, "PROCESADA", "API_AWS_POST", banco, prioridad);
 
                             boolean exitoso = enviarACloud(httpClient, jsonMensaje);
 
                             if (exitoso) {
                                 channel.basicAck(delivery.getEnvelope().getDeliveryTag(), false);
-                                System.out.println(" Transacción guardada en la nube y confirmada.");
+                                System.out.println(" [OK] Confirmado en AWS y Rabbit.");
                             } else {
-                                System.err.println(" [❌] Error al enviar a la nube. Reintentando...");
-                                channel.basicNack(delivery.getEnvelope().getDeliveryTag(), false, true);
+                                
+                                System.err.println(" [❌] Fallo en POST. Enviando a " + COLA_ERRORES);
+                                channel.basicPublish("", COLA_ERRORES, null, delivery.getBody());
+                                channel.basicAck(delivery.getEnvelope().getDeliveryTag(), false);
                             }
                         }
 
                     } catch (Exception e) {
-                        System.err.println(" [!] Error procesando el mensaje: " + e.getMessage());
-                        channel.basicNack(delivery.getEnvelope().getDeliveryTag(), false, false);
+                        System.err.println(" [!] Error de formato: " + e.getMessage());
+                        channel.basicPublish("", COLA_ERRORES, null, delivery.getBody());
+                        channel.basicAck(delivery.getEnvelope().getDeliveryTag(), false);
                     }
                 };
 
@@ -104,6 +106,16 @@ public class Main {
         }
     }
 
+    private static void imprimirLog(String id, String estado, String destino, String banco, int prioridad) {
+        System.out.println("\n-----------------------------------------");
+        System.out.println("ID Transacción: " + id);
+        System.out.println("Prioridad:      " + prioridad + (prioridad >= 8 ? " [ALTA]" : " [NORMAL]"));
+        System.out.println("Estado:         " + estado);
+        System.out.println("Cola Destino:   " + destino);
+        System.out.println("Atendiendo cola: " + banco);
+        System.out.println("-----------------------------------------");
+    }
+
     private static boolean enviarACloud(HttpClient client, String jsonBody) {
         try {
             HttpRequest request = HttpRequest.newBuilder()
@@ -113,11 +125,8 @@ public class Main {
                     .build();
 
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-            System.out.println(" Respuesta de Amazon: " + response.statusCode());
             return response.statusCode() == 200 || response.statusCode() == 201;
-
         } catch (Exception e) {
-            System.err.println(" Fallo de conexión con Amazon: " + e.getMessage());
             return false;
         }
     }

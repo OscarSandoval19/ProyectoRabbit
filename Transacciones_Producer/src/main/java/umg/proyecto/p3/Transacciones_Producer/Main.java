@@ -2,6 +2,7 @@ package umg.proyecto.p3.Transacciones_Producer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
@@ -13,11 +14,12 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.util.HashMap;
+import java.util.Map;
 
 public class Main {
 
     public static void main(String[] args) {
-      
         String urlApi = "https://hly784ig9d.execute-api.us-east-1.amazonaws.com/default/transacciones"; 
 
         try {
@@ -62,9 +64,12 @@ public class Main {
             ObjectMapper mapper = new ObjectMapper();
             mapper.registerModule(new JavaTimeModule());
 
+         
+            Map<String, Object> argsMap = new HashMap<>();
+            argsMap.put("x-max-priority", 10);
+
             for (Transaccion tx : lote.getTransacciones()) {
                 
-               
                 if (tx.getDetalle() != null) {
                     String Nombre = "Oscar Guillermo Sandoval García"; 
                     String Carnet = "0905-24-5388"; 
@@ -72,17 +77,26 @@ public class Main {
                     String firma = "Alumno: " + Nombre + " | Carnet: " + Carnet + "| Correo: " + Correo;
                     tx.getDetalle().setDescripcion(firma + " | " + tx.getDetalle().getDescripcion());
                 }
-               
 
                 String nombreCola = tx.getBancoDestino(); 
-                channel.queueDeclare(nombreCola, true, false, false, null);
-
                 
+                
+                channel.queueDeclare(nombreCola, true, false, false, argsMap);
+
+               
+                int nivelPrioridad = nombreCola.equalsIgnoreCase("BI") ? 10 : 1;
+
+                AMQP.BasicProperties props = new AMQP.BasicProperties.Builder()
+                        .priority(nivelPrioridad)
+                        .contentType("application/json")
+                        .build();
+
                 String mensajeJson = mapper.writeValueAsString(tx);
 
-                channel.basicPublish("", nombreCola, null, mensajeJson.getBytes(StandardCharsets.UTF_8));
+             
+                channel.basicPublish("", nombreCola, props, mensajeJson.getBytes(StandardCharsets.UTF_8));
                 
-                System.out.println(" [✔] Enviada TX " + tx.getIdTransaccion() + " a cola: " + nombreCola);
+                System.out.println(" [✔] Enviada TX " + tx.getIdTransaccion() + " a cola: " + nombreCola + " [Prioridad: " + nivelPrioridad + "]");
             }
             
             System.out.println("\n--- Proceso finalizado correctamente ---");
@@ -92,5 +106,3 @@ public class Main {
         }
     }
 }
-
-
