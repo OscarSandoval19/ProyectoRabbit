@@ -9,5 +9,15 @@ public class Ejercicio2 {
         int[] datos = {7, 2, 9, 4, 1, 8};
         
         int[] resultado = secondMinMax(datos);
+        
+        System.out.println("Entrada: [7,2,9,4,1,8]");
+        System.out.println("Resultado: " + Arrays.toString(resultado));
+        
     }
+    public static int[] secondMinMax(int[] numbers) {
+        int max = Integer.MIN_VALUE;
+        int secondMax = Integer.MIN_VALUE;
+        int min = Integer.MAX_VALUE;
+        int secondMin = Integer.MAX_VALUE;
+}
 }
